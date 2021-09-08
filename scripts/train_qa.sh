@@ -15,6 +15,10 @@
 
 # Script to train a model on SQuAD v1.1 or the English TyDiQA-GoldP train data.
 
+# Added additional flags
+TRAIN_LANG="en"
+EVAL_LANG="en"
+
 REPO=$PWD
 MODEL=${1:-bert-base-multilingual-cased}
 SRC=${2:-squad}
@@ -22,13 +26,16 @@ TGT=${3:-xquad}
 GPU=${4:-0}
 DATA_DIR=${5:-"$REPO/download/"}
 OUT_DIR=${6:-"$REPO/outputs/"}
+TRAIN_FILE_NAME=${7}
+PREDICTIONS_DIR=${8:-"/content/predictions/"}
+PREDICT_FILE_NAME=${9}
 
 BATCH_SIZE=4
 GRAD_ACC=8
 
 MAXL=384
 LR=3e-5
-NUM_EPOCHS=3.0
+NUM_EPOCHS=2.0
 if [ $MODEL == "bert-base-multilingual-cased" ]; then
   MODEL_TYPE="bert"
 elif [ $MODEL == "xlm-mlm-100-1280" ] || [ $MODEL == "xlm-mlm-tlm-xnli15-1024" ]; then
@@ -45,6 +52,22 @@ if [ $SRC == 'squad' ]; then
   TASK_DATA_DIR=${DATA_DIR}/squad
   TRAIN_FILE=${TASK_DATA_DIR}/train-v1.1.json
   PREDICT_FILE=${TASK_DATA_DIR}/dev-v1.1.json
+elif [ $TASK == 'chaii_hi' ]; then
+  TASK_DATA_DIR=${DATA_DIR}
+  TRAIN_FILE_NAME=${TRAIN_FILE_NAME:-train.hi.qa.jsonl}
+  PREDICT_FILE_NAME=${PREDICT_FILE_NAME:-dev.hi.qa.jsonl}
+  TRAIN_FILE=${TASK_DATA_DIR}/${TRAIN_FILE_NAME}
+  PREDICT_FILE=${TASK_DATA_DIR}/${PREDICT_FILE_NAME}
+  TRAIN_LANG="hi"
+  EVAL_LANG="hi"
+elif [ $TASK == 'chaii_ta' ]; then
+  TASK_DATA_DIR=${DATA_DIR}
+  TRAIN_FILE_NAME=${TRAIN_FILE_NAME:-train.ta.qa.jsonl}
+  PREDICT_FILE_NAME=${PREDICT_FILE_NAME:-dev.ta.qa.jsonl}
+  TRAIN_FILE=${TASK_DATA_DIR}/${TRAIN_FILE_NAME}
+  PREDICT_FILE=${TASK_DATA_DIR}/${PREDICT_FILE_NAME}
+  TRAIN_LANG="ta"
+  EVAL_LANG="ta"
 else
   TASK_DATA_DIR=${DATA_DIR}/tydiqa
   TRAIN_FILE=${TASK_DATA_DIR}/tydiqa-goldp-v1.1-train/tydiqa.en.train.json
@@ -72,8 +95,8 @@ CUDA_VISIBLE_DEVICES=$GPU python third_party/run_squad.py \
   --output_dir ${MODEL_PATH} \
   --weight_decay 0.0001 \
   --threads 8 \
-  --train_lang en \
-  --eval_lang en
+  --train_lang ${TRAIN_LANG} \
+  --eval_lang ${TRAIN_LANG}
 
 # predict
 bash scripts/predict_qa.sh $MODEL $MODEL_PATH $TGT $GPU $DATA_DIR

@@ -45,6 +45,14 @@ elif [ $TGT == 'mlqa' ]; then
   langs=( en es de ar hi vi zh )
 elif [ $TGT == 'tydiqa' ]; then
   langs=( en ar bn fi id ko ru sw te )
+elif [ $TGT == 'chaii_hi' ]; then
+  DIR=${DATA_DIR}
+  langs=( hi )
+  PRED_DIR=${PREDICTIONS_DIR}
+elif [ $TGT == 'chaii_ta' ]; then
+  DIR=${DATA_DIR}
+  langs=( ta )
+  PRED_DIR=${PREDICTIONS_DIR}
 fi
 
 echo "************************"
@@ -61,6 +69,12 @@ for lang in ${langs[@]}; do
     TEST_FILE=${DIR}/MLQA_V1/test/test-context-$lang-question-$lang.json
   elif [ $TGT == 'tydiqa' ]; then
     TEST_FILE=${DIR}/tydiqa-goldp-v1.1-dev/tydiqa.goldp.$lang.dev.json
+  elif [ $TGT == 'chaii_hi' ]; then
+    PREDICT_FILE_NAME=${PREDICT_FILE_NAME:-"dev.hi.qa.jsonl"}
+    TEST_FILE=${DIR}/${PREDICT_FILE_NAME}
+  elif [ $TGT == 'chaii_ta' ]; then
+    PREDICT_FILE_NAME=${PREDICT_FILE_NAME:-"dev.ta.qa.jsonl"}
+    TEST_FILE=${DIR}/${PREDICT_FILE_NAME}
   fi
 
   CUDA_VISIBLE_DEVICES=${GPU} python third_party/run_squad.py \
